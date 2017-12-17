@@ -1,0 +1,5 @@
+{
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/thaffe/.platformio/penv/bin:/home/thaffe/.nvm/versions/node/v8.9.0/bin:/home/thaffe/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games"
+    }
+}
