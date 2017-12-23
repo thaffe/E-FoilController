@@ -6,7 +6,7 @@
             "request": "launch",
             "cwd": "${workspaceRoot}",
             "name": "PlatformIO Debugger",
-            "target": "/home/thaffe/Documents/PlatformIO/Projects/Reciever/.pioenvs/protrinket3/firmware.elf",
+            "target": "/home/thaffe/Documents/PlatformIO/Projects/EFoilController/Reciever/.pioenvs/protrinket3/firmware.elf",
             "gdbpath": "/home/thaffe/.platformio/penv/bin/piodebuggdb",
             "autorun": [ "source .pioinit" ]
         }

@@ -15,17 +15,20 @@ void ReceiverController::setup()
     motorPowerServo.write(minMotorOutput);
 
     //Start Bluetooth communication
-    BTSerial.begin(9600);
+    // BTSerial.begin(9600);
     Serial.begin(9600);
+    delay(btPowerTimeout * 2);
 }
 
 void ReceiverController::loop()
 {
+
     readBluetooth();
     updatePowerStatus();
     updateMotorOuput();
+    // sendBatteryStatus();
 
-    //  debug();
+    //debug();
     lastChange = millis();
     delay(timeout);
 }
@@ -48,12 +51,15 @@ void ReceiverController::debug()
 
 void ReceiverController::readBluetooth()
 {
-    if (BTSerial.available() > 0)
+    //Serial.println(BTSerial.available());
+    if (Serial.available() > 0)
     {
-        lastBtRead = BTSerial.read();
+        lastBtRead = Serial.read();
+
         // Fush other
-        while (BTSerial.available() > 0)
-            BTSerial.read();
+        while (Serial.available() > 0)
+            Serial.read();
+
         timeLastBtReading = millis();
         timeSinceLastBtReading = 0;
     }
@@ -100,7 +106,19 @@ int ReceiverController::getMotorStep()
     float step = ceilf(1.0 * (millis() - lastChange) / timeFromMinToMax * motorRangeOutput);
     // IF 0 speed then no dead mans button or gas released then double stepsize
     if (lastBtRead == 0)
-        return step * 2;
+        return step * killMotorMultiplyer;
 
     return step;
+}
+
+void ReceiverController::sendBatteryStatus()
+{
+
+    if (lastSentBatteryStatus < millis())
+    {
+        lastSentBatteryStatus = millis() + sendBatteryStatusEvery;
+        float percent = (analogRead(voltagePin) - minVoltage) / (maxVoltage - minVoltage);
+        uint8_t value = max(0, min(256, percent * 256));
+        Serial.write(value);
+    }
 }

@@ -1,44 +1,58 @@
 #include "TransmitterController.h"
 
-const float zeroSpeed = 65;
-const float maxSpeed = 770;
-const float throttleRange = maxSpeed - zeroSpeed;
-#define MIN_SPEED = 0;
-#define MAX_SPEED = 100;
-#define DELAY 30
-
-TransmitterController::TransmitterController()
-{
-}
+TransmitterController::TransmitterController() {}
 
 void TransmitterController::setup()
 {
     // Set all IO
     pinMode(deadMansButtonPin, INPUT_PULLUP);
     pinMode(throttlePin, INPUT);
-  
+
     //Start BlueTooth communication
-    BTSerial.begin(9600);
+    // BTSerial.begin(9600);
+    Serial.begin(9600);
+
+    // Initi readings to zeroSpeed
+    for (int i = 0; i < averageReadsCount; i++)
+    {
+        lastReadings[i] = throttleMin;
+    }
 }
 
 void TransmitterController::loop()
 {
-    if (!digitalRead(deadMansButtonPin))
+
+    updateThrottleReading();
+
+    if (readCount >= readingsPrSend)
     {
-        float percent = (analogRead(throttlePin) - zeroSpeed) / throttleRange;
-        throttleReading = min(max((1 - percent) * 256, 0), 256);
-    }
-    else
-    {
-        throttleReading = 0;
+        readCount = 0;
+        uint8_t reading = min(max(getAverage() * 256, 0), 256);
+        // Serial.println(reading);
+        Serial.write(reading);
     }
 
-    BTSerial.write(throttleReading);
-    delay(50);
+    delay(updateEveryMs);
 }
 
-void TransmitterController::SendThrottleReading(uint8_t reading)
+void TransmitterController::updateThrottleReading()
 {
-    BTSerial.write(reading);
-    delay(DELAY);
+    float reading = 0;
+    if (!digitalRead(deadMansButtonPin))
+        reading = 1 - (analogRead(throttlePin) - throttleMin) / throttleRange;
+
+    lastReadings[readPointer] = reading;
+    readPointer++;
+    readCount++;
+    if (readPointer >= averageReadsCount)
+        readPointer = 0;
+}
+
+float TransmitterController::getAverage()
+{
+    float sum = 0;
+    for (int i = 0; i < averageReadsCount; i++)
+        sum += lastReadings[i];
+
+    return sum / averageReadsCount;
 }
